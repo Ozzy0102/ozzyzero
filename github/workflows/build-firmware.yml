@@ -1,0 +1,59 @@
+name: Build Ozzyzero Momentum Firmware
+
+on:
+  workflow_dispatch: {}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+
+    steps:
+      - name: Checkout this repo (your Ozzyzero source)
+        uses: actions/checkout@v4
+        with:
+          path: ozzyzero-src
+
+      - name: Clone Momentum Firmware
+        run: |
+          git clone --recursive --jobs 8 https://github.com/Next-Flip/Momentum-Firmware.git momentum
+
+      - name: Inject Ozzyzero as an internal app
+        run: |
+          mkdir -p momentum/applications/main/ozzyzero
+          cp ozzyzero-src/application.fam momentum/applications/main/ozzyzero/
+          cp ozzyzero-src/ozzyzero_app.c momentum/applications/main/ozzyzero/
+          cp ozzyzero-src/ozzy_terminal.c momentum/applications/main/ozzyzero/
+          cp ozzyzero-src/ozzy_terminal.h momentum/applications/main/ozzyzero/
+          echo "---- Files in place: ----"
+          ls -la momentum/applications/main/ozzyzero/
+
+      - name: Show registered app IDs (sanity check for loader_name values)
+        run: |
+          echo "Compare these against the loader_name strings in ozzyzero_app.c:"
+          grep -r "appid=" momentum/applications/main/nfc/application.fam || true
+          grep -r "appid=" momentum/applications/main/subghz/application.fam || true
+          grep -r "appid=" momentum/applications/main/infrared/application.fam || true
+          grep -r "appid=" momentum/applications/main/ibutton/application.fam || true
+          grep -r "appid=" momentum/applications/main/gpio/application.fam || true
+          grep -r "appid=" momentum/applications/main/bad_usb/application.fam || true
+          grep -r "appid=" momentum/applications/main/u2f/application.fam || true
+
+      - name: Build firmware (this is the slow part - be patient)
+        working-directory: momentum
+        run: |
+          ./fbt updater_package
+
+      - name: Find build outputs
+        working-directory: momentum
+        run: |
+          echo "---- dist folder contents: ----"
+          find dist -maxdepth 4 -type f | head -50
+
+      - name: Upload firmware build as downloadable artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ozzyzero-momentum-firmware
+          path: |
+            momentum/dist/**
+          retention-days: 14
