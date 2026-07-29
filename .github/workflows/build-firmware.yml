@@ -25,8 +25,18 @@ jobs:
           cp ozzyzero-src/ozzyzero_app.c momentum/applications/main/ozzyzero/
           cp ozzyzero-src/ozzy_terminal.c momentum/applications/main/ozzyzero/
           cp ozzyzero-src/ozzy_terminal.h momentum/applications/main/ozzyzero/
+
           echo "---- Files in place: ----"
           ls -la momentum/applications/main/ozzyzero/
+
+      - name: Verify Ozzyzero injection
+        working-directory: momentum
+        run: |
+          echo "---- Checking Ozzyzero files ----"
+          ls -la applications/main/ozzyzero
+
+          echo "---- Searching Ozzyzero references ----"
+          grep -r "ozzyzero" applications/main/ozzyzero || true
 
       - name: Show registered app IDs (sanity check for loader_name values)
         run: |
