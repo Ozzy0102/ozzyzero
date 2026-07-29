@@ -1,0 +1,13 @@
+App(
+    appid="ozzyzero",
+    name="Ozzyzero",
+    apptype=FlipperAppType.MENUEXTERNAL,
+    entry_point="ozzyzero_app",
+    stack_size=2 * 1024,
+    icon="A_Ozzyzero_14",
+    order=0,
+    requires=[
+        "gui",
+        "loader",
+    ],
+)
